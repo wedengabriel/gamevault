@@ -19,7 +19,8 @@ class _GameFormScreenState extends State<GameFormScreen> {
   final categoriaController = TextEditingController();
   final valorPagoController = TextEditingController();
   final valorEstimadoController = TextEditingController();
-
+  final imagemController = TextEditingController();
+  
   String status = "Na coleção";
   String raridade = "Comum";
 
@@ -35,6 +36,7 @@ class _GameFormScreenState extends State<GameFormScreen> {
       raridade = widget.game!.raridade;
       valorPagoController.text = widget.game!.valorPago.toString();
       valorEstimadoController.text = widget.game!.valorEstimado.toString();
+      imagemController.text = widget.game!.imagem;
     }
   }
 
@@ -50,7 +52,7 @@ class _GameFormScreenState extends State<GameFormScreen> {
       valorEstimado: double.tryParse(valorEstimadoController.text) ?? 0,
       localizacao: widget.game?.localizacao ?? "",
       observacoes: widget.game?.observacoes ?? "",
-      imagem: widget.game?.imagem ?? "",
+      imagem: imagemController.text,
     );
 
     Navigator.pop(context, jogo);
@@ -92,6 +94,16 @@ class _GameFormScreenState extends State<GameFormScreen> {
                 controller: categoriaController,
                 decoration: const InputDecoration(
                   labelText: "Categoria",
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              TextField(
+                controller: imagemController,
+                decoration: const InputDecoration(
+                  labelText: "URL da capa",
+                  hintText: "https://...",
                 ),
               ),
 
