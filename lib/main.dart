@@ -3,7 +3,8 @@ import 'models/game_model.dart';
 import 'services/game_service.dart';
 import 'screens/game_form_screen.dart';
 import 'screens/game_detail_screen.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'screens/report_screen.dart';
+import 'screens/about_screen.dart';
 
 void main() {
   runApp(const GameVaultApp());
@@ -43,6 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String filtroStatus = "Todos";
 
+  String filtroRaridade = "Todas";
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +54,56 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> carregarJogos() async {
     jogos = await service.getGames();
+
+    if (jogos.isEmpty) {
+      await service.addGame(
+        GameModel(
+          nome: "God of War",
+          plataforma: "PlayStation",
+          categoria: "Ação",
+          status: "Na coleção",
+          raridade: "Raro",
+          valorPago: 199.90,
+          valorEstimado: 250.00,
+          localizacao: "Estante",
+          observacoes: "Mídia física",
+          imagem: "https://upload.wikimedia.org/wikipedia/en/a/a7/God_of_War_4_cover.jpg",
+        ),
+      );
+
+      await service.addGame(
+        GameModel(
+          nome: "GTA V",
+          plataforma: "PC",
+          categoria: "Mundo aberto",
+          status: "Lista de desejos",
+          raridade: "Comum",
+          valorPago: 0,
+          valorEstimado: 89.90,
+          localizacao: "Desejado",
+          observacoes: "Comprar em promoção",
+          imagem: "https://upload.wikimedia.org/wikipedia/en/a/a5/Grand_Theft_Auto_V.png",
+        ),
+      );
+
+      await service.addGame(
+        GameModel(
+          nome: "The Legend of Zelda",
+          plataforma: "Nintendo Switch",
+          categoria: "Aventura",
+          status: "Emprestado",
+          raridade: "Lendário",
+          valorPago: 299.90,
+          valorEstimado: 350.00,
+          localizacao: "Emprestado para amigo",
+          observacoes: "Item emprestado",
+          imagem: "https://upload.wikimedia.org/wikipedia/en/thumb/0/0b/The_Legend_of_Zelda_Breath_of_the_Wild.jpg/250px-The_Legend_of_Zelda_Breath_of_the_Wild.jpg",
+        ),
+      );
+
+      jogos = await service.getGames();
+    }
+
     jogosFiltrados = List.from(jogos);
 
     setState(() {});
@@ -82,19 +135,49 @@ class _HomeScreenState extends State<HomeScreen> {
             );
 
         final statusOk =
-            filtroStatus == "Todos"
-            || jogo.status == filtroStatus;
+          filtroStatus == "Todos" || jogo.status == filtroStatus;
 
-        return buscaOk && statusOk;
+        final raridadeOk =
+          filtroRaridade == "Todas" || jogo.raridade == filtroRaridade;
+
+        return buscaOk && statusOk && raridadeOk;
 
       }).toList();
 
     });
   }
 
-  Future<void> excluirJogo(int id) async {
-    await service.deleteGame(id);
-    carregarJogos();
+  Future<void> excluirJogo(GameModel jogo) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Excluir jogo"),
+          content: Text(
+            "Tem certeza que deseja excluir ${jogo.nome}?",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text("Cancelar"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text("Excluir"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar == true) {
+      await service.deleteGame(jogo.id!);
+      carregarJogos();
+    }
   }
 
   Future<void> editarJogo(GameModel jogo) async {
@@ -149,6 +232,26 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> abrirRelatorios() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReportScreen(
+          jogos: jogos,
+        ),
+      ),
+    );
+  }
+
+  Future<void> abrirSobre() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AboutScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final totalInvestido = jogos.fold<double>(
@@ -172,14 +275,29 @@ class _HomeScreenState extends State<HomeScreen> {
     return jogo.status == "Trocado";
   }).length;
 
-  final totalColecao = jogos.where((jogo) {
-    return jogo.status == "Na coleção";
-  }).length;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("GameVault"),
         centerTitle: true,
+
+        actions: [
+
+          IconButton(
+            icon: const Icon(Icons.bar_chart),
+
+            onPressed: () {
+              abrirRelatorios();
+            },
+          ),
+
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+
+            onPressed: () {
+              abrirSobre();
+            },
+          ),
+        ],
       ),
 
       body: Padding(
@@ -261,57 +379,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
 
-          SizedBox(
-            height: 120,
-
-            child: PieChart(
-
-              PieChartData(
-
-                centerSpaceRadius: 25,
-                sectionsSpace: 3,
-
-                sections: [
-
-                  PieChartSectionData(
-                    value: totalColecao.toDouble(),
-                    title: totalColecao.toString(),
-                    radius: 35,
-                    color: Colors.green,
-                  ),
-
-                  PieChartSectionData(
-                    value: totalDesejos.toDouble(),
-                    title: totalDesejos.toString(),
-                    radius: 35,
-                    color: Colors.blue,
-                  ),
-
-                  PieChartSectionData(
-                    value: totalEmprestados.toDouble(),
-                    title: totalEmprestados.toString(),
-                    radius: 35,
-                    color: Colors.orange,
-                  ),
-
-                  PieChartSectionData(
-                    value: totalVendidos.toDouble(),
-                    title: totalVendidos.toString(),
-                    radius: 35,
-                    color: Colors.red,
-                  ),
-
-                  PieChartSectionData(
-                    value: totalTrocados.toDouble(),
-                    title: totalTrocados.toString(),
-                    radius: 35,
-                    color: Colors.purple,
-                  ),
-                ],
-              )
-            ),
-          ),
-
             const SizedBox(height: 12),
 
             TextField(
@@ -376,6 +443,39 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 12),
 
+          DropdownButtonFormField<String>(
+            value: filtroRaridade,
+            decoration: const InputDecoration(
+              labelText: "Filtrar por raridade",
+              border: OutlineInputBorder(),
+            ),
+            items: const [
+              DropdownMenuItem(
+                value: "Todas",
+                child: Text("Todas"),
+              ),
+              DropdownMenuItem(
+                value: "Comum",
+                child: Text("Comum"),
+              ),
+              DropdownMenuItem(
+                value: "Raro",
+                child: Text("Raro"),
+              ),
+              DropdownMenuItem(
+                value: "Lendário",
+                child: Text("Lendário"),
+              ),
+            ],
+            onChanged: (valor) {
+              setState(() {
+                filtroRaridade = valor!;
+              });
+
+              atualizarFiltros();
+            },
+          ),
+
             Expanded(
               child: jogosFiltrados.isEmpty
                   ? const Center(
@@ -423,7 +523,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.red,
                               ),
                               onPressed: () {
-                                excluirJogo(jogo.id!);
+                                excluirJogo(jogo);
                               },
                             ),
                           ),
