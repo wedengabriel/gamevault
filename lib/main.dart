@@ -65,6 +65,24 @@ class _HomeScreenState extends State<HomeScreen> {
     carregarJogos();
   }
 
+Future<void> editarJogo(GameModel jogo) async {
+
+  final jogoEditado = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => GameFormScreen(
+        game: jogo,
+      ),
+    ),
+  );
+
+  if (jogoEditado != null) {
+    await service.updateGame(jogoEditado);
+
+    carregarJogos();
+  }
+}
+
   Future<void> abrirCadastro() async {
     final jogo = await Navigator.push(
       context,
@@ -157,6 +175,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         return Card(
                           child: ListTile(
+                            onTap: () {
+                              editarJogo(jogo);
+                            },
                             leading: const Icon(Icons.sports_esports),
                             title: Text(jogo.nome),
                             subtitle: Text(
