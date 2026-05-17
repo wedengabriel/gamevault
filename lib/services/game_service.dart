@@ -1,55 +1,49 @@
-import 'dart:convert';
-
-import 'package:shared_preferences/shared_preferences.dart';
+import '../database/database_helper.dart';
 import '../models/game_model.dart';
 
 class GameService {
-  static const String _key = 'games';
+  final dbHelper = DatabaseHelper.instance;
 
   Future<List<GameModel>> getGames() async {
-    final prefs = await SharedPreferences.getInstance();
-    final gamesJson = prefs.getStringList(_key) ?? [];
+    final db = await dbHelper.database;
 
-    return gamesJson
-        .map((game) => GameModel.fromMap(jsonDecode(game)))
-        .toList();
-  }
+    final result = await db.query(
+      'games',
+      orderBy: 'id DESC',
+    );
 
-  Future<void> saveGames(List<GameModel> games) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    final gamesJson = games
-        .map((game) => jsonEncode(game.toMap()))
-        .toList();
-
-    await prefs.setStringList(_key, gamesJson);
+    return result.map((map) {
+      return GameModel.fromMap(map);
+    }).toList();
   }
 
   Future<void> addGame(GameModel game) async {
-    final games = await getGames();
+    final db = await dbHelper.database;
 
-    game.id = DateTime.now().millisecondsSinceEpoch;
-    games.add(game);
-
-    await saveGames(games);
+    await db.insert(
+      'games',
+      game.toMap(),
+    );
   }
 
-  Future<void> updateGame(GameModel updatedGame) async {
-    final games = await getGames();
+  Future<void> updateGame(GameModel game) async {
+    final db = await dbHelper.database;
 
-    final index = games.indexWhere((game) => game.id == updatedGame.id);
-
-    if (index != -1) {
-      games[index] = updatedGame;
-      await saveGames(games);
-    }
+    await db.update(
+      'games',
+      game.toMap(),
+      where: 'id = ?',
+      whereArgs: [game.id],
+    );
   }
 
   Future<void> deleteGame(int id) async {
-    final games = await getGames();
+    final db = await dbHelper.database;
 
-    games.removeWhere((game) => game.id == id);
-
-    await saveGames(games);
+    await db.delete(
+      'games',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }

@@ -1,3 +1,5 @@
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'models/game_model.dart';
 import 'services/game_service.dart';
@@ -7,7 +9,15 @@ import 'screens/report_screen.dart';
 import 'screens/about_screen.dart';
 
 void main() {
-  runApp(const GameVaultApp());
+
+  if (Platform.isWindows) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
+  runApp(
+    const GameVaultApp(),
+  );
 }
 
 class GameVaultApp extends StatelessWidget {
@@ -97,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
           valorEstimado: 350.00,
           localizacao: "Emprestado para amigo",
           observacoes: "Item emprestado",
-          imagem: "https://upload.wikimedia.org/wikipedia/en/thumb/0/0b/The_Legend_of_Zelda_Breath_of_the_Wild.jpg/250px-The_Legend_of_Zelda_Breath_of_the_Wild.jpg",
+          imagem: "https://img.hype.games/cdn/c64bd743-e83f-4677-a53b-e03fdc4f6566[BHN-Nintendo]-The-Legend-of-Zelda-Breath-of-the-Wild%20(1).png",
         ),
       );
 
