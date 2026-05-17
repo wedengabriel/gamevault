@@ -225,14 +225,6 @@ Recursos implementados:
 ✅ APK Android
 
 ---
-## 👨‍💻 Autor
-
-Weden Gabriel da Silva Gomes
-
-RU: 4170826
-
-Curso: Análise e Desenvolvimento de Sistemas — UNINTER
-
-GitHub:
+## 🔗 Repositório
 
 https://github.com/wedengabriel/gamevault
