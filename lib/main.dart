@@ -7,6 +7,7 @@ import 'screens/game_form_screen.dart';
 import 'screens/game_detail_screen.dart';
 import 'screens/report_screen.dart';
 import 'screens/about_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
 
@@ -20,25 +21,104 @@ void main() {
   );
 }
 
-class GameVaultApp extends StatelessWidget {
+class GameVaultApp extends StatefulWidget {
   const GameVaultApp({super.key});
+
+  @override
+  State<GameVaultApp> createState() => _GameVaultAppState();
+}
+
+class _GameVaultAppState extends State<GameVaultApp> {
+  bool temaEscuro = true;
+
+    @override
+    void initState() {
+      super.initState();
+      carregarTema();
+    }
+
+    Future<void> carregarTema() async {
+      final prefs =
+          await SharedPreferences.getInstance();
+
+      setState(() {
+        temaEscuro =
+            prefs.getBool("temaEscuro") ?? true;
+      });
+    }
+
+  void alternarTema() async {
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    setState(() {
+      temaEscuro = !temaEscuro;
+    });
+
+    await prefs.setBool(
+      "temaEscuro",
+      temaEscuro,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'GameVault',
+
+      themeMode: temaEscuro ? ThemeMode.dark : ThemeMode.light,
+
       theme: ThemeData(
-        colorSchemeSeed: Colors.deepPurple,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+        ),
+        cardTheme: CardThemeData(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.dark,
+        ),
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1E1E1E),
+        ),
+        cardTheme: CardThemeData(
+          color: const Color(0xFF1F1F1F),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        useMaterial3: true,
+      ),
+
+      home: HomeScreen(
+        temaEscuro: temaEscuro,
+        alternarTema: alternarTema,
+      ),
     );
   }
 }
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+
+  final bool temaEscuro;
+  final VoidCallback alternarTema;
+
+  const HomeScreen({
+    super.key,
+    required this.temaEscuro,
+    required this.alternarTema,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -293,8 +373,17 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
 
           IconButton(
-            icon: const Icon(Icons.bar_chart),
+            icon: Icon(
+            widget.temaEscuro
+                ? Icons.light_mode
+                : Icons.dark_mode,
+          ),
 
+          onPressed: widget.alternarTema,
+          ),
+
+          IconButton(
+            icon: const Icon(Icons.bar_chart),
             onPressed: () {
               abrirRelatorios();
             },
@@ -302,7 +391,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           IconButton(
             icon: const Icon(Icons.info_outline),
-
             onPressed: () {
               abrirSobre();
             },
